@@ -117,7 +117,7 @@ plt.plot(
     theta_i_space,
     power_s_space,
     c=COLORS[0], linewidth=3,
-    label=f"Оптимизированная модель $P_s(θ_i)$"
+    label="Оптимизированная модель $P_{rs}(θ_i)$"
 )
 
 plt.errorbar(
@@ -142,11 +142,11 @@ ax.yaxis.set_minor_locator(plt.MultipleLocator(y_tick / 4))
 ax.grid(which="major", c="#696969", linestyle="-", linewidth=1, alpha=0.6)
 ax.grid(which="minor", c="#696969", linestyle="--", linewidth=0.5, alpha=0.6)
 
-plt.title(f"Зависимость мощности отражённого s-пол. света от угла падения $P_s(θ_i)$",
+plt.title("Зависимость мощности отражённого s-пол. света от угла падения $P_{rs}(θ_i)$",
           fontsize=22, pad=22)
 plt.xlabel("Угол падения света $θ_i$, °",
            fontsize=20, labelpad=10)
-plt.ylabel("Мощность отражённого света $P_s$, мкВт",
+plt.ylabel("Мощность отражённого света $P_{rs}$, мкВт",
            fontsize=20, labelpad=10)
 
 plt.savefig("polarization_pics/power-theta_i_s_alt.png")
@@ -218,7 +218,7 @@ plt.plot(
     theta_i_space,
     power_p_space,
     c=COLORS[2], linewidth=3,
-    label=f"Оптимизированная модель $P_p(θ_i)$"
+    label="Оптимизированная модель $P_{rp}(θ_i)$"
 )
 
 plt.errorbar(
@@ -250,11 +250,11 @@ ax.yaxis.set_minor_locator(plt.MultipleLocator(y_tick / 4))
 ax.grid(which="major", c="#696969", linestyle="-", linewidth=1, alpha=0.6)
 ax.grid(which="minor", c="#696969", linestyle="--", linewidth=0.5, alpha=0.6)
 
-plt.title(f"Зависимость мощности отражённого p-пол. света от угла падения $P_p(θ_i)$",
+plt.title("Зависимость мощности отражённого p-пол. света от угла падения $P_{rp}(θ_i)$",
           fontsize=22, pad=22)
 plt.xlabel("Угол падения света $θ_i$, °",
            fontsize=20, labelpad=10)
-plt.ylabel("Мощность отражённого света $P_p$, мкВт",
+plt.ylabel("Мощность отражённого света $P_{rp}$, мкВт",
            fontsize=20, labelpad=10)
 
 plt.savefig("polarization_pics/power-theta_i_p_alt.png")
@@ -339,28 +339,7 @@ plt.savefig("polarization_pics/R-theta_i_alt.png")
 print(f"After matching:\n")
 
 lower_bound = np.array([1.92999, 0.0, 0.0, 0.0])
-upper_bound = np.array([1.93, 5000.0, 100.0, 1.0])
-
-result_s = opt.curve_fit(power,
-                         np.radians(theta_i_s_data),
-                         power_s_data,
-                         p0=parameters_s_0,
-                         sigma=power_s_err,
-                         absolute_sigma=True,
-                         bounds=(lower_bound, upper_bound),
-                         jac=power_jacobi)
-
-result_err_s = np.sqrt(np.diag(result_s[1]))
-
-n_21_s_opt = np.array([result_s[0][0], result_err_s[0]])
-power_s_0_opt = np.array([result_s[0][1], result_err_s[1]])
-noise_s_opt = np.array([result_s[0][2], result_err_s[2]])
-alpha_s_opt = np.array([result_s[0][3], result_err_s[3]])
-
-print(f"n_21_s: {n_21_s_opt[0]}±{n_21_s_opt[1]}\n"
-      f"power_s_0: {power_s_0_opt[0]}±{power_s_0_opt[1]}\n"
-      f"noise_s: {noise_s_opt[0]}±{noise_s_opt[1]}\n"
-      f"alpha_s: {alpha_s_opt[0]}±{alpha_s_opt[1]}\n")
+upper_bound = np.array([1.93001, 5000.0, 100.0, 1.0])
 
 result_p = opt.curve_fit(power,
                          np.radians(theta_i_p_data),
@@ -387,8 +366,31 @@ print(f"n_21_p: {n_21_p_opt[0]}±{n_21_p_opt[1]}\n"
       f"alpha_p: {alpha_p_opt[0]}±{alpha_p_opt[1]}\n"
       f"brewster's angle: {np.degrees(brewster_angle.x[0])}\n")
 
+result_s = opt.curve_fit(lambda t, n_21, p, n, a: power(t, 1.93, p, noise_p_opt[0], a),
+                         np.radians(theta_i_s_data),
+                         power_s_data,
+                         p0=parameters_s_0,
+                         sigma=power_s_err,
+                         absolute_sigma=True,
+                         bounds=(lower_bound, upper_bound),
+                         jac=power_jacobi)
+
+result_err_s = np.sqrt(np.diag(result_s[1]))
+
+n_21_s_opt = np.array([result_s[0][0], result_err_s[0]])
+power_s_0_opt = np.array([result_s[0][1], result_err_s[1]])
+noise_s_opt = np.array([result_s[0][2], result_err_s[2]])
+alpha_s_opt = np.array([result_s[0][3], result_err_s[3]])
+
+print(f"n_21_s: {n_21_s_opt[0]}±{n_21_s_opt[1]}\n"
+      f"power_s_0: {power_s_0_opt[0]}±{power_s_0_opt[1]}\n"
+      f"noise_s: {noise_s_opt[0]}±{noise_s_opt[1]}\n"
+      f"alpha_s: {alpha_s_opt[0]}±{alpha_s_opt[1]}\n")
+
 R_s_data = (power_s_data - noise_s_opt[0]) / power_s_0_opt[0]
+R_s_err = np.abs(R_s_data * (0.011 + power_s_0_opt[1] / power_s_0_opt[0]))
 R_p_data = (power_p_data - noise_p_opt[0]) / power_p_0_opt[0]
+R_p_err = np.abs(R_p_data * (0.011 + power_p_0_opt[1] / power_p_0_opt[0]))
 
 plt.figure(figsize=(16, 10), dpi=400)
 ax = plt.axes()
@@ -415,10 +417,22 @@ plt.plot(
           f"Оценка $n_{{21s}} = {n_21_s_opt[0]:.2f}±{np.ceil(n_21_s_opt[1] * 100.) / 100.:.2f}$"
 )
 
-plt.plot(
+plt.errorbar(
     theta_i_s_data,
     R_s_data,
-    color=COLORS[1], marker='o', markersize=6, linewidth=0
+    xerr=theta_i_s_err,
+    yerr=R_s_err,
+    color=COLORS[1], marker='o', markersize=6, linewidth=0,
+    ecolor=COLORS[4], elinewidth=2
+)
+
+plt.errorbar(
+    theta_i_p_data,
+    R_p_data,
+    xerr=theta_i_p_err,
+    yerr=R_p_err,
+    color=COLORS[3], marker='o', markersize=6, linewidth=0,
+    ecolor=COLORS[4], elinewidth=2
 )
 
 plt.plot(
@@ -427,12 +441,6 @@ plt.plot(
     c=COLORS[2], linewidth=3,
     label=f"Коэффициент отражения $R_p(θ_i)$\n"
           f"Оценка $n_{{21p}} = {n_21_p_opt[0]:.2f}±{np.ceil(n_21_p_opt[1] * 100.) / 100.:.2f}$"
-)
-
-plt.plot(
-    theta_i_p_data,
-    R_p_data,
-    color=COLORS[3], marker='o', markersize=6, linewidth=0
 )
 
 plt.plot(
