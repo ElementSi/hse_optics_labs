@@ -8,7 +8,7 @@ def process_data(data):
     return result
 
 
-file_pattern = os.path.join('../data', 'green_one-slit_series', '* mm.txt')
+file_pattern = os.path.join(os.path.dirname(__file__), '..', 'data', 'green_one-slit_series', '* mm.txt')
 file_list = sorted(glob.glob(file_pattern), key=lambda x: int(os.path.basename(x).split()[0]))
 
 num_files = len(file_list)
