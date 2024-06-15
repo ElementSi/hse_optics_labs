@@ -35,8 +35,6 @@ for file_id, file_name in enumerate(file_list):
     data = np.loadtxt(file_name, delimiter='\t', dtype=np.float64)
     intensity = data[:, 3]
 
-    pixel_id = np.arange(intensity.size)
-
     high_intensity_indices = np.where(intensity > INTENSITY_THRESHOLD)[0]
 
     high_intensity_indices = dc.delete_excess(high_intensity_indices)
@@ -50,7 +48,7 @@ for file_id, file_name in enumerate(file_list):
         fun=lambda x:
         dc.loss_function(
             dc.one_slit_intensity(
-                pixel_id,
+                dc.pixel_id,
                 zero_bounds,
                 dc.SENSOR_RES,
                 dc.G_WAVELENGTH,
@@ -71,7 +69,7 @@ for file_id, file_name in enumerate(file_list):
         jac=lambda x:
         dc.loss_jac(
             dc.one_slit_intensity(
-                pixel_id,
+                dc.pixel_id,
                 zero_bounds,
                 dc.SENSOR_RES,
                 dc.G_WAVELENGTH,
@@ -81,7 +79,7 @@ for file_id, file_name in enumerate(file_list):
             ),
             intensity,
             dc.one_slit_intensity_jac(
-                pixel_id,
+                dc.pixel_id,
                 zero_bounds,
                 dc.SENSOR_RES,
                 dc.G_WAVELENGTH,
@@ -103,7 +101,7 @@ for file_id, file_name in enumerate(file_list):
                                         INTENSITY_THRESHOLD)
 
     plt.errorbar(
-        pixel_id,
+        dc.pixel_id,
         intensity,
         yerr=intensity_error,
         fmt='none',
@@ -114,14 +112,14 @@ for file_id, file_name in enumerate(file_list):
     )
 
     plt.scatter(
-        pixel_id,
+        dc.pixel_id,
         intensity,
         s=32,
         color=dc.COLORS[0],
         zorder=1,
     )
 
-    pixel_space = np.linspace(pixel_id[0], pixel_id[-1], pixel_id.size * MODEL_SCALE_FACTOR, endpoint=False)
+    pixel_space = np.linspace(dc.pixel_id[0], dc.pixel_id[-1], dc.pixel_id.size * MODEL_SCALE_FACTOR, endpoint=False)
     scaled_zero_bounds = zero_bounds * MODEL_SCALE_FACTOR
 
     plt.plot(

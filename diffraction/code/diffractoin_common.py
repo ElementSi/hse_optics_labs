@@ -4,12 +4,16 @@ COLORS = [
     "#80D04B",  # green laser (532nm)
     "#235299",  # cyan-blue (green laser triadic 1)
     "#D04B80",  # mystic (green laser triadic 2)
+    "#B22091",  # red laser (632.8nm)
 ]
 
 SENSOR_RES = 0.0056  # mm/pixel
 SN_RATIO = 45.0  # dB -
 G_WAVELENGTH = 0.000532  # mm - green laser
+R_WAVELENGTH = 0.0006328  # mm - red laser
 DIST_0 = 56  # mm - dist from z0 to screen
+
+pixel_id = np.arange(640)
 
 
 def delete_excess(array):
@@ -59,6 +63,21 @@ def one_slit_intensity(pix, f_bounds, res, lmbd, r0, threshold, b, x0, intens0, 
     intens = intens0 * sinc_alpha_squared + noise
 
     intens = filter_large_v(intens, intens, f_bounds, threshold)
+
+    return intens
+
+
+def two_slit_intensity(pix, res, lmbd, r0, b, d, x0, intens0, noise):
+    alpha = np.pi * (b / lmbd) * ((pix * res - x0) / (r0 + DIST_0))
+    beta = np.pi * (d / lmbd) * ((pix * res - x0) / (r0 + DIST_0))
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        sin_alpha = np.sin(alpha)
+        alpha_safe = np.where(alpha == 0, np.nan, alpha)
+        sinc_alpha = np.where(alpha == 0, 1, sin_alpha / alpha_safe)
+        sinc_alpha_squared = sinc_alpha ** 2
+
+    intens = intens0 * sinc_alpha_squared * np.cos(beta) ** 2 + noise
 
     return intens
 
